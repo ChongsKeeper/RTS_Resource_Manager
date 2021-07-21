@@ -1,0 +1,17 @@
+Gun Bullets Ore
+Bullets Gunpowder Ore
+Ore Coal
+Gunpowder
+Coal
+Pickaxe Diamonds Sticks
+Sticks Planks
+Planks Log
+Log
+Glass Sand
+Sand Gravel
+Gravel Cobble
+Cobble Stone
+Stone
+Emerald
+Topaz
+Saphire
