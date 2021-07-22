@@ -8,12 +8,12 @@
 
 
 class Node :
-	public Subject, public Observer//, std::enable_shared_from_this<Node>
+	public Subject, public Observer
 {
 	std::string name;
 	std::string sortName;
-	std::vector<std::shared_ptr<Node>> dpens; // dependencies
-	std::vector<std::shared_ptr<Observer>> observersList; // list of all other nodes that depend on this one
+	std::vector<Node *> dpens; // dependencies
+	std::vector<Observer *> observersList; // list of all other nodes that depend on this one
 	bool complete; // stores whether the dependencies are all valid
 	bool deleted;
 
@@ -23,10 +23,11 @@ public:
 	void setName(std::string newName);
 	std::string getName(); // returns the name of the item
 	std::string getSortName();
-	std::vector<std::shared_ptr<Node>> getDpens(); // returns a vector for the List class to process
-	void addDpen(const std::shared_ptr<Node>& newDpen);
+	std::vector<Node *> getDpens(); // returns a vector for the List class to process
+	void addDpen(Node *newDpen);
+	void sortDpens();
 
-	void addObserver(const std::shared_ptr<Observer>& observer);
+	void addObserver(Observer *observer);
 	void notifyObservers();
 	void update();
 
@@ -34,4 +35,3 @@ public:
 	bool isDeleted();
 	void setDeleted(bool newDeleted);
 };
-

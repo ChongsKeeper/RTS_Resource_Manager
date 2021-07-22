@@ -1,7 +1,6 @@
 Bullets Gunpowder Ore
 Coal
 Cobble Stone
-Emerald
 Glass Sand
 Gravel Cobble
 Gun Bullets Ore
@@ -11,7 +10,7 @@ Ore Coal
 Pickaxe Diamonds Sticks
 Planks Log
 Sand Gravel
-Saphire
+Saphire Emerald
 Sticks Planks
 Stone
-Topaz
+Topaz Saphire

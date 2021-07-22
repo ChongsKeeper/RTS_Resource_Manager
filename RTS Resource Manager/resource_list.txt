@@ -12,6 +12,6 @@ Sand Gravel
 Gravel Cobble
 Cobble Stone
 Stone
-Emerald
-Topaz
-Saphire
+Emerald Topaz
+Topaz Saphire
+Saphire Emerald

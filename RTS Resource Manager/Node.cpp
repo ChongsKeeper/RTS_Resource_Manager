@@ -32,30 +32,33 @@ string Node::getSortName()
 	return sortName;
 }
 
-vector<shared_ptr<Node>> Node::getDpens()
+vector<Node *> Node::getDpens()
 {
 	return dpens;
 }
 
-void Node::addDpen(const shared_ptr<Node>& newDpen)
+void Node::addDpen(Node *newDpen)
 {
 	dpens.emplace_back(newDpen);
-	if (auto self = weak_from_this().lock()) {
-		newDpen->addObserver(shared_from_this());
-	}
-	else {
-		std::cout << "Bad weak_this\n";
-	}
+	newDpen->addObserver(this); // every node observes it's dependencies to watch for changes
 }
 
-void Node::addObserver(const shared_ptr<Observer>& observer)
+void Node::sortDpens()
+{
+	sort(dpens.begin(), dpens.end(), [](Node *nodeA, Node *nodeB)
+		{
+			return nodeA->getSortName() < nodeB->getSortName();
+		});
+}
+
+void Node::addObserver(Observer *observer)
 {
 	observersList.emplace_back(observer);
 }
 
 void Node::notifyObservers()
 {
-	for (auto& observer : observersList)
+	for (auto observer : observersList)
 	{
 		observer->update();
 	}
@@ -64,7 +67,7 @@ void Node::notifyObservers()
 void Node::update()
 {
 	complete = true;
-	for (auto& node : dpens)
+	for (const auto node : dpens)
 	{
 		if (node->isDeleted())
 		{

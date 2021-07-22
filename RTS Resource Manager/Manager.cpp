@@ -11,7 +11,7 @@ TODO: COMMENT EVERYTHING
 
 
 
-shared_ptr<Node> Manager::findNode(string nodeToFind)
+Node * Manager::findNode(string nodeToFind)
 {
 	for (auto node : nodes)
 	{
@@ -23,12 +23,20 @@ shared_ptr<Node> Manager::findNode(string nodeToFind)
 	return NULL;
 }
 
-void Manager::addNode(string newName, bool deleted = false)
+Manager::~Manager() // destructor to cleanup all the New Nodes created in the import step
 {
-	nodes.emplace_back(make_shared<Node>(newName, deleted));
+	for (auto& node : nodes)
+	{
+		delete node;
+	}
 }
 
-vector<shared_ptr<Node>> Manager::getNodes()
+void Manager::addNode(string newName, bool deleted = false)
+{
+	nodes.emplace_back(new Node(newName, deleted));
+}
+
+vector<Node*> Manager::getNodes()
 {
 	return nodes;
 }
@@ -37,8 +45,8 @@ void Manager::importFile(string fileName)
 {
 	ifstream inFile(fileName);
 	string line, nodeName, dependency;
-	vector<shared_ptr<Node>> dpenVec;
-	shared_ptr<Node> currentNode, currentDpen;
+	vector<Node*> dpenVec;
+	Node *currentNode, *currentDpen;
 
 	while (getline(inFile, line))
 	{
@@ -77,8 +85,12 @@ void Manager::importFile(string fileName)
 		inFile.close();
 	}
 	sortNodes();
-	// Check the dependency chains to remove any infinite dependency loops
-	//removeLoops();
+	for (auto node : nodes)
+	{
+		node->sortDpens();
+	}
+	// a chain of dependencies causes the print function to loop forever. removeLoops() checks for them and deletes the parent node if it loops back on itself
+	removeLoops();
 }
 
 void Manager::exportFile(string fileName)
@@ -108,27 +120,19 @@ void Manager::exportFile(string fileName)
 
 void Manager::sortNodes()
 {
-	sort(nodes.begin(), nodes.end(), [](const shared_ptr<Node> nodeA, const shared_ptr<Node> nodeB)
+	sort(nodes.begin(), nodes.end(), [](Node *nodeA, Node *nodeB)
 		{
 			return nodeA->getSortName() < nodeB->getSortName(); 
 		});
 }
 
+//TODO: move all name printing to print dpens function
 void Manager::printNodes()
 {
 	for (auto& node : nodes)
 	{
-		if (!node->isDeleted())
-		{
-			cout << node->getName();
-			if (!node->isComplete())
-			{
-				cout << "  (incomplete)";
-			}
-			cout << "\n";
-			printDpens(node->getDpens(), 0);
-			cout << "\n";
-		}
+		printDpens(node, 0);
+		cout << "\n";
 	}
 }
 
@@ -140,71 +144,72 @@ void Manager::printDashes(int layer)
 	}
 }
 
-void Manager::printDpens(vector<shared_ptr<Node>> dpens, int layer)
+void Manager::printDpens(Node *node, int layer)
 {
-	layer++;
-	for (const auto& node : dpens)
+
+	if (node->isDeleted())
 	{
 		printDashes(layer);
-
+		cout << node->getName() << "  (deleted)\n";
+	}
+	else
+	{
+		printDashes(layer);
 		cout << node->getName();
-		if (node->isDeleted())
+		if (!node->isComplete())
 		{
-			cout << "  (deleted)\n";
+			cout << "  (incomplete)";
 		}
-		else
+		cout << "\n";
+		if (node->getDpens().size() > 0)
 		{
-			cout << "\n";
-			if (node->getDpens().size() > 0)
+			layer++;
+			for (auto nextNode : node->getDpens())
 			{
-				printDpens(node->getDpens(), layer);
+				printDpens(nextNode, layer);
 			}
 		}
 	}
 }
 
-//void Manager::removeLoops()
-//{
-//	vector<bool> isLoop;
-//	for (unsigned int j = 0; j < nodes.size(); j++)
-//	{
-//		isLoop.push_back(false);
-//	}
-//	for (unsigned int i = 0; i < nodes.size(); i++)
-//	{
-//		if (loopCheck(i, i, isLoop) == false)
-//		{
-//			nodes[i]->setDeleted(true);
-//		}
-//	}
-//}
-//
-//bool Manager::loopCheck(int nodeIndex, int currentIndex, vector<bool> isLoop)
-//{
-//	auto dpens = nodes[currentIndex]->getDpens();
-//
-//	bool result = true;
-//
-//	if (dpens.size() == 0)
-//	{
-//		return true;
-//	}
-//	for (unsigned int i = 0; i < dpens.size(); i++)
-//	{
-//		if (isLoop[currentIndex])
-//		{
-//			return false;
-//		}
-//		else if (nodes[dpens[i]]->isDeleted())
-//		{
-//			return true;
-//		}
-//		else
-//		{
-//			vector<bool> nextLoop = isLoop;
-//			nextLoop[currentIndex] = true;
-//			result = loopCheck(nodeIndex, dpens[i], nextLoop);
-//		}
-//	}
-//	return result;
-//}
+void Manager::removeLoops()
+{
+	vector<Node *> isLoop;
+	for (auto node : nodes)
+	{
+		if (loopCheck(node, isLoop) == true)
+		{
+			node->setDeleted(true);
+		}
+	}
+}
+
+bool Manager::loopCheck(Node *currentNode, vector<Node *> isLoop)
+{
+	if (any_of(isLoop.begin(), isLoop.end(), [currentNode] (Node * nodeB) {return currentNode == nodeB;} ))
+	{
+		return true;
+	}
+
+	auto dpens = currentNode->getDpens();
+	if (dpens.empty())
+	{
+		return false;
+	}
+
+	isLoop.emplace_back(currentNode);
+	bool result = false;
+
+	for (auto nextNode : dpens)
+	{
+		if (nextNode->isDeleted())
+		{
+			continue;
+		}
+		else
+		{
+			result = loopCheck(nextNode, isLoop);
+		}
+	}
+	return result;
+}
