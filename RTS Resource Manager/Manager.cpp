@@ -43,6 +43,11 @@ vector<Node*> Manager::getNodes()
 
 void Manager::importFile(string fileName)
 {
+	//regex regexFilename("[a-zA-Z_]*\\.[txt]");
+	bool validEntry = false;
+	
+	cout << "Enter a file name for import. Included file is named resources.txt or you may add a new file to the folder.\n";
+
 	ifstream inFile(fileName);
 	string line, nodeName, dependency;
 	vector<Node*> dpenVec;
@@ -90,7 +95,6 @@ void Manager::importFile(string fileName)
 		node->sortDpens();
 	}
 	// a chain of dependencies causes the print function to loop forever. removeLoops() checks for them and deletes the parent node if it loops back on itself
-	removeLoops();
 }
 
 void Manager::exportFile(string fileName)
@@ -125,6 +129,25 @@ void Manager::sortNodes()
 			return nodeA->getSortName() < nodeB->getSortName(); 
 		});
 }
+
+//std::vector<Node*> Manager::getSearchList(char search[])
+//{
+//
+//	for (unsigned int i = 0; i < strlen(search); i++)
+//	{
+//		search[i] = tolower(search[i]);
+//	}
+//
+//	std::vector<Node*> filteredList;
+//	for (auto& node : nodes)
+//	{
+//		if (strstr(node->getSortName().c_str(), search))
+//		{
+//			filteredList.push_back(node);
+//		}
+//	}
+//	return filteredList;
+//}
 
 //TODO: move all name printing to print dpens function
 void Manager::printNodes()
@@ -170,46 +193,4 @@ void Manager::printDpens(Node *node, int layer)
 			}
 		}
 	}
-}
-
-void Manager::removeLoops()
-{
-	vector<Node *> isLoop;
-	for (auto node : nodes)
-	{
-		if (loopCheck(node, isLoop) == true)
-		{
-			node->setDeleted(true);
-		}
-	}
-}
-
-bool Manager::loopCheck(Node *currentNode, vector<Node *> isLoop)
-{
-	if (any_of(isLoop.begin(), isLoop.end(), [currentNode] (Node * nodeB) {return currentNode == nodeB;} ))
-	{
-		return true;
-	}
-
-	auto dpens = currentNode->getDpens();
-	if (dpens.empty())
-	{
-		return false;
-	}
-
-	isLoop.emplace_back(currentNode);
-	bool result = false;
-
-	for (auto nextNode : dpens)
-	{
-		if (nextNode->isDeleted())
-		{
-			continue;
-		}
-		else
-		{
-			result = loopCheck(nextNode, isLoop);
-		}
-	}
-	return result;
 }

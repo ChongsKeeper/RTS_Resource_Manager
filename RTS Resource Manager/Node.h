@@ -17,7 +17,10 @@ class Node :
 	bool complete; // stores whether the dependencies are all valid
 	bool deleted;
 
+	bool loopCheck(Node* root, Node* newDpen);
+
 public:
+
 	Node(std::string newName, bool newDeleted);
 
 	void setName(std::string newName);
@@ -25,9 +28,11 @@ public:
 	std::string getSortName();
 	std::vector<Node *> getDpens(); // returns a vector for the List class to process
 	void addDpen(Node *newDpen);
+	void removeDpen(Node* oldDpen);
 	void sortDpens();
 
 	void addObserver(Observer *observer);
+	void removeObserver(Observer* observer);
 	void notifyObservers();
 	void update();
 

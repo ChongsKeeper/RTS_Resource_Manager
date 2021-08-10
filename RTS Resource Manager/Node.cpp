@@ -39,8 +39,40 @@ vector<Node *> Node::getDpens()
 
 void Node::addDpen(Node *newDpen)
 {
-	dpens.emplace_back(newDpen);
-	newDpen->addObserver(this); // every node observes it's dependencies to watch for changes
+	if (loopCheck(this, newDpen))
+	{
+		dpens.emplace_back(newDpen);
+		newDpen->addObserver(this); // every node observes it's dependencies to watch for changes
+	}
+}
+
+bool Node::loopCheck(Node* root, Node* newDpen)
+{
+	if (root == newDpen)
+	{
+		return false;
+	}
+	else
+	{
+		for (auto& node : newDpen->getDpens())
+		{
+			if (!loopCheck(root, node)) return false;
+		}
+	}
+	return true;
+}
+
+void Node::removeDpen(Node* oldDpen)
+{
+	for (unsigned int i = 0; i < dpens.size(); i++)
+	{
+		if (oldDpen == dpens[i])
+		{
+			dpens.erase(dpens.begin() + i);
+			return;
+		}
+	}
+	oldDpen->removeObserver(this); // every node observes it's dependencies to watch for changes
 }
 
 void Node::sortDpens()
@@ -54,6 +86,18 @@ void Node::sortDpens()
 void Node::addObserver(Observer *observer)
 {
 	observersList.emplace_back(observer);
+}
+
+void Node::removeObserver(Observer* observer)
+{
+	for (unsigned int i = 0; i < observersList.size(); i++)
+	{
+		if (observer == observersList[i])
+		{
+			observersList.erase(observersList.begin() + i);
+			return;
+		}
+	}
 }
 
 void Node::notifyObservers()

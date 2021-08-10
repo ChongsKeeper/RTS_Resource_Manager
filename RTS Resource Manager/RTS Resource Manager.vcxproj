@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.210211.2\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.210211.2\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="..\packages\Microsoft.ProjectReunion.0.8.1\build\native\Microsoft.ProjectReunion.props" Condition="Exists('..\packages\Microsoft.ProjectReunion.0.8.1\build\native\Microsoft.ProjectReunion.props')" />
+  <Import Project="..\packages\Microsoft.ProjectReunion.WinUI.0.8.1\build\native\Microsoft.ProjectReunion.WinUI.props" Condition="Exists('..\packages\Microsoft.ProjectReunion.WinUI.0.8.1\build\native\Microsoft.ProjectReunion.WinUI.props')" />
+  <Import Project="..\packages\Microsoft.ProjectReunion.Foundation.0.8.1\build\native\Microsoft.ProjectReunion.Foundation.props" Condition="Exists('..\packages\Microsoft.ProjectReunion.Foundation.0.8.1\build\native\Microsoft.ProjectReunion.Foundation.props')" />
+  <Import Project="..\packages\Microsoft.ProjectReunion.DWrite.0.8.1\build\Microsoft.ProjectReunion.DWrite.props" Condition="Exists('..\packages\Microsoft.ProjectReunion.DWrite.0.8.1\build\Microsoft.ProjectReunion.DWrite.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -92,6 +97,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(DXSDK_DIR)/Lib/x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -120,6 +127,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,17 +147,54 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="imgui.cpp" />
+    <ClCompile Include="imgui_demo.cpp" />
+    <ClCompile Include="imgui_draw.cpp" />
+    <ClCompile Include="imgui_impl_dx11.cpp" />
+    <ClCompile Include="imgui_impl_win32.cpp" />
+    <ClCompile Include="imgui_tables.cpp" />
+    <ClCompile Include="imgui_widgets.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Manager.cpp" />
+    <ClCompile Include="NodeRender.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="imconfig.h" />
+    <ClInclude Include="imgui.h" />
+    <ClInclude Include="imgui_impl_dx11.h" />
+    <ClInclude Include="imgui_impl_win32.h" />
+    <ClInclude Include="imgui_internal.h" />
+    <ClInclude Include="imstb_rectpack.h" />
+    <ClInclude Include="imstb_textedit.h" />
+    <ClInclude Include="imstb_truetype.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Manager.h" />
+    <ClInclude Include="NodeRender.h" />
     <ClInclude Include="SubjectAndObserver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.ProjectReunion.DWrite.0.8.1\build\Microsoft.ProjectReunion.DWrite.targets" Condition="Exists('..\packages\Microsoft.ProjectReunion.DWrite.0.8.1\build\Microsoft.ProjectReunion.DWrite.targets')" />
+    <Import Project="..\packages\Microsoft.ProjectReunion.Foundation.0.8.1\build\native\Microsoft.ProjectReunion.Foundation.targets" Condition="Exists('..\packages\Microsoft.ProjectReunion.Foundation.0.8.1\build\native\Microsoft.ProjectReunion.Foundation.targets')" />
+    <Import Project="..\packages\Microsoft.ProjectReunion.InteractiveExperiences.0.8.1\build\native\Microsoft.ProjectReunion.InteractiveExperiences.targets" Condition="Exists('..\packages\Microsoft.ProjectReunion.InteractiveExperiences.0.8.1\build\native\Microsoft.ProjectReunion.InteractiveExperiences.targets')" />
+    <Import Project="..\packages\Microsoft.ProjectReunion.WinUI.0.8.1\build\native\Microsoft.ProjectReunion.WinUI.targets" Condition="Exists('..\packages\Microsoft.ProjectReunion.WinUI.0.8.1\build\native\Microsoft.ProjectReunion.WinUI.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.210211.2\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.210211.2\build\native\Microsoft.Windows.CppWinRT.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.ProjectReunion.DWrite.0.8.1\build\Microsoft.ProjectReunion.DWrite.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ProjectReunion.DWrite.0.8.1\build\Microsoft.ProjectReunion.DWrite.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.ProjectReunion.DWrite.0.8.1\build\Microsoft.ProjectReunion.DWrite.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ProjectReunion.DWrite.0.8.1\build\Microsoft.ProjectReunion.DWrite.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.ProjectReunion.Foundation.0.8.1\build\native\Microsoft.ProjectReunion.Foundation.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ProjectReunion.Foundation.0.8.1\build\native\Microsoft.ProjectReunion.Foundation.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.ProjectReunion.Foundation.0.8.1\build\native\Microsoft.ProjectReunion.Foundation.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ProjectReunion.Foundation.0.8.1\build\native\Microsoft.ProjectReunion.Foundation.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.ProjectReunion.InteractiveExperiences.0.8.1\build\native\Microsoft.ProjectReunion.InteractiveExperiences.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ProjectReunion.InteractiveExperiences.0.8.1\build\native\Microsoft.ProjectReunion.InteractiveExperiences.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.ProjectReunion.WinUI.0.8.1\build\native\Microsoft.ProjectReunion.WinUI.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ProjectReunion.WinUI.0.8.1\build\native\Microsoft.ProjectReunion.WinUI.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.ProjectReunion.WinUI.0.8.1\build\native\Microsoft.ProjectReunion.WinUI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ProjectReunion.WinUI.0.8.1\build\native\Microsoft.ProjectReunion.WinUI.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.ProjectReunion.0.8.1\build\native\Microsoft.ProjectReunion.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ProjectReunion.0.8.1\build\native\Microsoft.ProjectReunion.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.210211.2\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.210211.2\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.210211.2\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.210211.2\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+  </Target>
 </Project>

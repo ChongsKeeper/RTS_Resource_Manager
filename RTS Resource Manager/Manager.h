@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <regex>
 #include "Node.h"
 
 class Manager
@@ -23,6 +24,7 @@ public:
 	void importFile(std::string fileName); // takes an input file and parses it into the item list
 	void exportFile(std::string fileName); // takes the name and dependency data in its current state and writes it to a specified file
 	void sortNodes();
+	//std::vector<Node*> getSearchList(char search[]);
 
 	void printNodes();
 	void removeLoops(); // Follows each dependency chain to make sure there aren't any dependency loops. Deletes the root node being searched if there are.
