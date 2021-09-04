@@ -1,3 +1,5 @@
+#pragma comment(lib,"d3d11.lib")
+
 #include "main.h"
 
 // Data
@@ -10,14 +12,14 @@ static ID3D11RenderTargetView* g_mainRenderTargetView = NULL;
 // Main code
 int main(int, char**)
 {
+    // Instantiate the manager object.
+    Manager& manager = Manager::getInstance();
 
-    Manager nodeList;
+    // Resource file name.
+    const std::string resourceFile = "resource.txt";
 
-    nodeList.importFile("resource_list.txt");
-
-    nodeList.printNodes();
-
-    nodeList.exportFile("test.txt");
+    // Import "resource.txt".
+    bool importSuccess = manager.importFile(resourceFile);
 
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
@@ -55,6 +57,16 @@ int main(int, char**)
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                                                                                                  //
+    // ---------------- // NodeGUI client. Used to create the display windows for the Node Manager. // ---------------- //
+    //                                                                                                                  //
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NodeGUI::Client& nodeGuiClient = NodeGUI::Client::getInstance();
+
     // Main loop
     bool done = false;
     while (!done)
@@ -81,247 +93,26 @@ int main(int, char**)
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
-        const float leftMenuWidth = 250;
-        const float dpenMenuHeight = 250;
-        
-        static Node* selectedDpen;
-        auto nodeVec = nodeList.getNodes();
-        static std::vector<Node*> dpenVec;
-        static bool showGraphView = false;
-        static Node* selectedNode = nodeVec[0];
-        bool add = false;
-        static bool showAddDpen = false;
-        static std::vector<Node*> masterList = nodeVec;
+
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //                                                                                                                  //
+        // ------------------------------------- // Create the three Node windows. // ------------------------------------- //
+        //                                                                                                                  //
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        if (importSuccess)
         {
-
-            ImGui::SetNextWindowPos(ImVec2(0, 0));
-            ImGui::SetNextWindowSize(ImVec2(leftMenuWidth, viewport->WorkSize.y));
-
-            ImGui::Begin("Master List", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-
-            static char name[32] = "";
-
-            ImGui::PushItemWidth(leftMenuWidth - 50);
-
-            if (ImGui::InputTextWithHint("##newNode", "New Node...", name, IM_ARRAYSIZE(name), ImGuiInputTextFlags_EnterReturnsTrue) && name[0] != '\0')
-            {
-                nodeList.addNode(name, false);
-                nodeList.sortNodes();
-                name[0] = 0;
-            }
-
-            ImGui::SameLine(leftMenuWidth - 38);
-
-            if (ImGui::Button("Add##create") && name[0] != '\0')
-            {
-                nodeList.addNode(name, false);
-                nodeList.sortNodes();
-                name[0] = 0;
-            }
-
-            ImGui::PushItemWidth(-1);
-
-            static char masterListFilter[32] = "";
-            ImGui::InputTextWithHint("##masterListFilter", "Filter...", masterListFilter, IM_ARRAYSIZE(masterListFilter));
-            
-            if (ImGui::BeginTabBar("##TabBar"))
-            {
-                if (ImGui::BeginTabItem("Valid Nodes"))
-                {
-                    if (ImGui::BeginListBox("##Nodes", ImVec2(0, viewport->WorkSize.y - 127)))
-                    {
-                        for (auto node : getSearchList(nodeVec, masterListFilter))
-                        {
-                            if (!node->isDeleted())
-                            {
-                                std::string nodeName = node->getName();
-                                if (ImGui::Selectable(nodeName.c_str(), selectedNode == node))
-                                {
-                                    selectedNode = NodeRender::setSelected(node);
-                                    dpenVec = selectedNode->getDpens();
-                                }
-                            }
-                        }
-                        ImGui::EndListBox();
-                    }
-
-                    if (ImGui::Button("Delete Selected")) selectedNode->setDeleted(true);
-
-                    ImGui::EndTabItem();
-                }
-
-                if (ImGui::BeginTabItem("Deleted Nodes##tab2"))
-                {
-                    if (ImGui::BeginListBox("##DeletedNodes", ImVec2(0, viewport->WorkSize.y - 127)))
-                    {
-                        for (auto node : getSearchList(nodeVec, masterListFilter))
-                        {
-                            if (node->isDeleted())
-                            {
-                                std::string nodeName = node->getName();
-                                if (ImGui::Selectable(nodeName.c_str(), selectedNode == node))
-                                {
-                                    selectedNode = NodeRender::setSelected(node);
-                                    dpenVec = selectedNode->getDpens();
-                                }
-                            }
-                        }
-                        ImGui::EndListBox();
-                    }
-
-                    if (ImGui::Button("Restore Selected")) selectedNode->setDeleted(false);
-
-                    ImGui::EndTabItem();
-                }
-
-                ImGui::EndTabBar();
-            }
-
-            ImGui::End();
-
-            static NodeRender::CanvasState canvas;
-              
-            ImGui::SetNextWindowPos(ImVec2(leftMenuWidth, viewport->WorkPos.y + dpenMenuHeight));
-            ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - leftMenuWidth, viewport->WorkSize.y - dpenMenuHeight));
-
-            if (!ImGui::Begin("Graph View", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
-            {
-                ImGui::End();
-            }
-            else
-            {
-                NodeRender::BeginCanvas(&canvas);
-
-                if (selectedNode != nullptr)
-                    NodeRender::createNodeGraph(selectedNode);
-
-                NodeRender::EndCanvas();
-
-                ImGui::End();
-            }           
-            
-            
-            static std::vector<Node*> addDpenVec;
-
-            ImGui::SetNextWindowPos(ImVec2(leftMenuWidth, 0));
-            ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - leftMenuWidth, dpenMenuHeight));
-
-            addDpenVec = addDpenList(selectedNode, nodeVec);
-
-            if (!ImGui::Begin("Dependency Editor", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
-            {
-                ImGui::End();
-            }
-            else
-            {
-                static char validNodeListFilter[32] = "";
-                static char dpenNodeListFilter[32] = "";
-
-                auto selNodeDpens = selectedNode->getDpens();
-
-                const ImGuiStyle& style = ImGui::GetStyle();
-
-                ImVec2 curPos(10, 25);
-
-                const float listWidth = 200.0f;
-                ImGui::PushItemWidth(listWidth);
-
-                ImGui::SetCursorPos(curPos);
-                ImGui::Text("Current Node: %s", selectedNode->getName().c_str());
-
-                curPos.y += 15;
-                ImGui::SetCursorPos(curPos);
-                ImGui::Text("Valid Nodes:");
-                
-                curPos.y += 15;
-                ImGui::SetCursorPos(curPos);
-                ImGui::InputTextWithHint("##validNodeListFilter", "Filter...", validNodeListFilter, IM_ARRAYSIZE(validNodeListFilter));
-
-                curPos.y += 23;
-                ImGui::SetCursorPos(curPos);
-
-                if (ImGui::BeginListBox("##dpens", ImVec2(listWidth, dpenMenuHeight - 87)))
-                {
-                    for (auto& dpen : getSearchList(addDpenVec, validNodeListFilter))
-                    {
-                        if (ImGui::Selectable(dpen->getName().c_str(), selectedDpen == dpen))
-                        {
-                            selectedDpen = dpen;
-                        }
-                    }
-                    ImGui::EndListBox();
-                }
-
-                curPos.x += listWidth + 5;
-                ImGui::SetCursorPos(curPos);
-
-                if (ImGui::Button("->##addDpenButton"))
-                {
-                    if (selectedDpen != nullptr)
-                    {
-                        selectedNode->addDpen(selectedDpen);
-                        selectedNode->sortDpens();
-                    }
-                }
-
-                const float btnHgt = 23;
-
-                curPos.y += btnHgt;
-                ImGui::SetCursorPos(curPos);
-
-                if (ImGui::Button("<-##removeDpenButton"))
-                {
-                    if (selectedDpen != nullptr)
-                    {
-                        selectedNode->removeDpen(selectedDpen);
-                        selectedNode->sortDpens();
-                    }
-                }
-
-                curPos.y += btnHgt;
-                ImGui::SetCursorPos(curPos);
-
-                if (ImGui::Button("<<##removeAllDpenButton"))
-                {
-                    for (auto& node : getSearchList(selNodeDpens, dpenNodeListFilter))
-                    {
-                        selectedNode->removeDpen(node);
-                    }
-                }
-
-                curPos.y = 40;
-                curPos.x += 27;
-                ImGui::SetCursorPos(curPos);
-
-                ImGui::Text("Current Dependencies:");
-
-                curPos.y += 15;
-                ImGui::SetCursorPos(curPos);
-
-                ImGui::InputTextWithHint("##dpenNodeListFilter", "Filter...", dpenNodeListFilter, IM_ARRAYSIZE(dpenNodeListFilter));
-
-                curPos.y += 23;
-                ImGui::SetCursorPos(curPos);
-
-                if (ImGui::BeginListBox("##Current Dependencies", ImVec2(listWidth, dpenMenuHeight - 87)))
-                {
-                    for (auto& node : getSearchList(selNodeDpens, dpenNodeListFilter))
-                    {
-                        if (ImGui::Selectable(node->getName().c_str(), selectedDpen == node))
-                        {
-                            selectedDpen = node;
-                        }
-                    }
-
-                    ImGui::EndListBox();
-
-                }
-
-                ImGui::End();
-            }
+            nodeGuiClient.createWindows();
         }
+        else
+        {
+            failedWindow(resourceFile);
+        }
+
+
+
 
         // Rendering
         ImGui::Render();
@@ -332,6 +123,12 @@ int main(int, char**)
 
         g_pSwapChain->Present(1, 0); // Present with vsync
         //g_pSwapChain->Present(0, 0); // Present without vsync
+    }
+
+    // Save the altered node graph on exit.
+    if (importSuccess)
+    {
+        manager.exportFile(resourceFile);
     }
 
     // Cleanup
@@ -345,6 +142,13 @@ int main(int, char**)
 
     return 0;
 }
+
+
+
+
+
+
+
 
 // Helper functions
 
@@ -429,43 +233,15 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-std::vector<Node*> addDpenList(Node* selectedNode, std::vector<Node*> nodeVec)
+
+void failedWindow(std::string resourceFile)
 {
-    std::vector<Node*> dpenList;
-    auto dpenVec = selectedNode->getDpens();
-    bool valid = true;
-    for (auto& node : nodeVec)
-    {
-        if (node != selectedNode && !node->isDeleted())
-        {
-            valid = true;
-            for (auto& dpen : dpenVec)
-            {
-                if (dpen == node) valid = false;
-            }
-            if (valid) dpenList.push_back(node);
-        }
-    }
-    return dpenList;
+    ImGui::Begin("Import Failed", nullptr);
+
+    std::string failMsg = "Failed to load file: \"" + resourceFile + "\".\nMake sure this program and the resource file are in the same directory.";
+    ImGui::Text(failMsg.c_str());
+
+    ImGui::End();
 }
 
-
-std::vector<Node*> getSearchList(std::vector<Node*> nodes, char search[])
-{
-
-    for (unsigned int i = 0; i < strlen(search); i++)
-    {
-        search[i] = tolower(search[i]);
-    }
-
-    std::vector<Node*> filteredList;
-    for (auto& node : nodes)
-    {
-        if (strstr(node->getSortName().c_str(), search))
-        {
-            filteredList.push_back(node);
-        }
-    }
-    return filteredList;
-}
 

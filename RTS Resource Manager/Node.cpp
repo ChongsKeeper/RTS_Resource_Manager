@@ -1,17 +1,16 @@
 #include "Node.h"
-using namespace std;
 
 
-Node::Node (string newName, bool newDeleted)
+Node::Node (std::string newName, bool newDeleted)
 {
 	setName(newName);
 	dpens = {};
 	deleted = newDeleted;
-	complete = true;
+	usable = true;
 	observersList = {};
 }
 
-void Node::setName(string newName)
+void Node::setName(std::string newName)
 {
 	name = newName;
 	sortName = "";
@@ -22,17 +21,17 @@ void Node::setName(string newName)
 	sortName += name; // make sort deterministic
 }
 
-string Node::getName()
+std::string Node::getName()
 {
 	return name;
 }
 
-string Node::getSortName()
+std::string Node::getSortName()
 {
 	return sortName;
 }
 
-vector<Node *> Node::getDpens()
+std::vector<Node *> Node::getDpens()
 {
 	return dpens;
 }
@@ -41,7 +40,7 @@ void Node::addDpen(Node *newDpen)
 {
 	if (loopCheck(this, newDpen))
 	{
-		dpens.emplace_back(newDpen);
+		dpens.push_back(newDpen);
 		newDpen->addObserver(this); // every node observes it's dependencies to watch for changes
 	}
 }
@@ -69,10 +68,11 @@ void Node::removeDpen(Node* oldDpen)
 		if (oldDpen == dpens[i])
 		{
 			dpens.erase(dpens.begin() + i);
+			oldDpen->removeObserver(this); // every node observes it's dependencies to watch for changes
+			update();
 			return;
 		}
 	}
-	oldDpen->removeObserver(this); // every node observes it's dependencies to watch for changes
 }
 
 void Node::sortDpens()
@@ -110,19 +110,17 @@ void Node::notifyObservers()
 
 void Node::update()
 {
-	complete = true;
 	for (const auto node : dpens)
 	{
-		if (node->isDeleted())
+		if (node->isDeleted() || !node->isUsable())
 		{
-			complete = false;
+			usable = false;
+			notifyObservers();
+			return;
 		}
 	}
-}
-
-bool Node::isComplete()
-{
-	return complete;
+	usable = true;
+	notifyObservers();
 }
 
 bool Node::isDeleted()
@@ -134,4 +132,9 @@ void Node::setDeleted(bool newDeleted)
 {
 	deleted = newDeleted;
 	notifyObservers();
+}
+
+bool Node::isUsable()
+{
+	return usable;
 }

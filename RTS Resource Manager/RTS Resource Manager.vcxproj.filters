@@ -48,7 +48,7 @@
     <ClCompile Include="imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="NodeRender.cpp">
+    <ClCompile Include="NodeGUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -89,7 +89,7 @@
     <ClInclude Include="imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="NodeRender.h">
+    <ClInclude Include="NodeGUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

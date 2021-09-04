@@ -157,7 +157,7 @@
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Manager.cpp" />
-    <ClCompile Include="NodeRender.cpp" />
+    <ClCompile Include="NodeGUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imconfig.h" />
@@ -171,7 +171,7 @@
     <ClInclude Include="Node.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Manager.h" />
-    <ClInclude Include="NodeRender.h" />
+    <ClInclude Include="NodeGUI.h" />
     <ClInclude Include="SubjectAndObserver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
