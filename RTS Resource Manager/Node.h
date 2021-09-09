@@ -11,7 +11,7 @@ class Node :
 	public Subject, public Observer
 {
 public:
-	Node(std::string newName, bool newDeleted);
+	Node(std::string newName);
 
 	void setName(std::string newName);
 	std::string getName(); // returns the name of the item

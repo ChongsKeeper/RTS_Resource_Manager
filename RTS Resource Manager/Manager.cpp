@@ -1,25 +1,12 @@
 #include "Manager.h"
 
-/*
-TODO: Input validation. Where do the checks go? User input/file output.
-TODO: What is the correct way to read a file? Line by line, block by block?
-TODO: Determine scale of things. Name length
-TODO: Regular expressions
-TODO: COMMENT EVERYTHING
-*/
-
-
-Manager& Manager::getInstance()
-{
-	static Manager instance;
-	return instance;
-}
 
 Manager::Manager()
 	: nodes{} {}
 
-Manager::~Manager() // destructor to cleanup all the New Nodes created in the import step
+Manager::~Manager() 
 {
+	// Memory cleanup
 	for (auto& node : nodes)
 	{
 		delete node;
@@ -28,37 +15,43 @@ Manager::~Manager() // destructor to cleanup all the New Nodes created in the im
 
 Node* Manager::findNode(std::string nodeToFind)
 {
+	// Node list is sorted. Use lower bound search to check if the new node is already in the list
 	auto const it = lower_bound(nodes.begin(), nodes.end(), nodeToFind, [](Node* node, std::string val)
 		{
 			return node->getName() < val;
 		}
 	);
 	
+	// if the iterator is at the end, the new node isn't in the list
 	if (it == nodes.end())
-		return NULL;
+		return nullptr;
 
+	// Only return the pointer if it matches. The iterator is either a match or the first node after the new node's position in the list
 	if ((*it)->getName() == nodeToFind)
 	{
 		return *it;
 	}
 	else
 	{
-		return NULL;
+		return nullptr;
 	}
 }
 
-Node* Manager::addNode(std::string newName, bool deleted = false)
+Node* Manager::addNode(std::string newName)
 {
+	// Insertion sort
     const auto it = std::upper_bound(nodes.begin(), nodes.end(), newName, [](std::string val, Node* node)
         {
             return val < node->getName();
         }
 	);
 	
-	Node* node = new Node(newName, deleted);
+	// Create a new node
+	Node* node = new Node(newName);
 
 	nodes.insert(it, node);
 
+	// Return a pointer to the new node
 	return node;
 }
 
@@ -69,8 +62,6 @@ std::vector<Node*> Manager::getNodes()
 
 bool Manager::importFile(std::string fileName)
 {
-	auto* timer = ModuleTimer::GetInstance();
-
 	std::ifstream inFile(fileName);
 
 	if (!inFile.is_open())
@@ -78,20 +69,22 @@ bool Manager::importFile(std::string fileName)
 		return false;
 	}
 
+	// String for the current line and nodes pulled out from it
 	std::string line, nodeName, dependency;
-	std::vector<Node*> dpenVec;
 	Node *currentNode, *currentDpen;
 
+	// Read the file line by line
 	while (getline(inFile, line))
 	{
-		// reset all the values for each pass to prevent erroneous data
+		// Reset all the values for each pass to prevent erroneous data
 		nodeName = "";
 		dependency = "";
-		dpenVec = {};
 		std::istringstream iss(line);
-		// read the Node name from the file
+
 		iss >> nodeName;
 		
+		// Some nodes will be added from the dependencies of other nodes before their line is reached.
+		// Check to see if those nodes are already present before adding them
 		currentNode = findNode(nodeName);
 
 		if (!currentNode)
@@ -99,6 +92,7 @@ bool Manager::importFile(std::string fileName)
 			currentNode = addNode(nodeName);
 		}
         
+		// Read the dependencies one at a time and add them to the parent node
 		while (iss >> dependency)
 		{
 			currentDpen = findNode(dependency);
@@ -109,18 +103,20 @@ bool Manager::importFile(std::string fileName)
 			currentNode->addDpen(currentDpen);
 		}
 	}
-
+	
 	if (inFile.is_open())
 	{
 		inFile.close();
 	}
 
-	for (auto node : nodes)
+	// Sort nodes is case insensitive.
+	sortNodes();
+
+	for (auto& node : nodes)
 	{
 		node->sortDpens();
 	}
-
-	std::cout << "There are " << nodes.size() << " nodes in the list.\n";
+	
 	return true;
 }
 
@@ -132,6 +128,7 @@ void Manager::exportFile(std::string fileName)
 	{
 		for (auto& node : nodes)
 		{
+			// Don't write deleted nodes to the output
 			if (!node->isDeleted())
 			{
 				outFile << node->getName();
@@ -143,6 +140,7 @@ void Manager::exportFile(std::string fileName)
 			}
 		}
 	}
+
 	if (outFile.is_open())
 	{
 		outFile.close();
@@ -151,41 +149,8 @@ void Manager::exportFile(std::string fileName)
 
 void Manager::sortNodes()
 {
-	sort(nodes.begin(), nodes.end(), [](Node* a, Node* b)
-		{
-			return a->getSortName() < b->getSortName(); 
-		});
-}
-
-void Manager::printDashes(int layer)
-{
-	for (int i = 0; i < layer*2; i++)
-	{
-		std::cout << "-";
-	}
-}
-
-void Manager::printDpens(Node *node, int layer)
-{
-
-	if (node->isDeleted())
-	{
-		printDashes(layer);
-		std::cout << node->getName() << "  (deleted)\n";
-	}
-	else
-	{
-		printDashes(layer);
-		std::cout << node->getName();
-
-		std::cout << "\n";
-		if (node->getDpens().size() > 0)
-		{
-			layer++;
-			for (auto nextNode : node->getDpens())
-			{
-				printDpens(nextNode, layer);
-			}
-		}
-	}
+    sort(nodes.begin(), nodes.end(), [](Node* a, Node* b)
+        {
+            return a->getSortName() < b->getSortName();
+        });
 }

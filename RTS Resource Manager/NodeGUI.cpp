@@ -29,15 +29,9 @@ namespace NodeGUI
     {
     }
 
-    Client& Client::getInstance()
-    {
-        static Client instance;
-        return instance;
-    }
-
-    Client::Client()
+    Client::Client(Manager *manager)
         : viewport(ImGui::GetMainViewport())
-        , manager(Manager::getInstance())
+        , manager(manager)
         , canvas(ImVec2{  50, 50 } // Relative Start Position
                , ImVec2{ 200, 50 } // Grid Spacing
                , ImVec2{ 100, 30 })// Box Size
@@ -54,10 +48,10 @@ namespace NodeGUI
     }
 
 
-    bool Client::createWindows()
+    bool Client::drawWindows()
     {
         // Populate the nodeList on every call.
-        nodeList = manager.getNodes();
+        nodeList = manager->getNodes();
 
         masterListWindow();
         graphWindow();
@@ -605,6 +599,7 @@ namespace NodeGUI
         std::vector<Node*> dpenList;
         auto dpenVec = selectedNode->getDpens();
         bool valid = true;
+
         for (auto& node : nodeVec)
         {
             if (node != selectedNode && !node->isDeleted())
@@ -621,18 +616,18 @@ namespace NodeGUI
     }
 
 
-    std::vector<Node*> Client::getSearchList(std::vector<Node*> nodes, char search[])
+    std::vector<Node*> Client::getSearchList(std::vector<Node*> nodes, char filter[])
     {
-        std::string filter;
-        for (unsigned int i = 0; i < strlen(search); i++)
+        std::string lowerFilter;
+        for (unsigned int i = 0; i < strlen(filter); i++)
         {
-            filter += tolower(search[i]);
+            lowerFilter += tolower(filter[i]);
         }
 
         std::vector<Node*> filteredList;
         for (auto& node : nodes)
         {
-            if (strstr(node->getSortName().c_str(), filter.c_str()))
+            if (strstr(node->getSortName().c_str(), lowerFilter.c_str()))
             {
                 filteredList.push_back(node);
             }
@@ -649,8 +644,8 @@ namespace NodeGUI
                 name[i] = '_';
             }
         }
-        manager.addNode(name, false);
-        manager.sortNodes();
+        manager->addNode(name);
+        manager->sortNodes();
         name[0] = 0;
     }
 }

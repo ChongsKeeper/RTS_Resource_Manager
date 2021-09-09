@@ -4,8 +4,8 @@
 #include <cstdlib>
 #include "Node.h"
 #include "Manager.h"
-#include "imgui_internal.h"
-#include "imgui.h"
+#include "ImGui/imgui_internal.h"
+#include "ImGui/imgui.h"
 
 
 namespace NodeGUI
@@ -48,23 +48,12 @@ namespace NodeGUI
     class Client
     {
     public:
-        // Returns the static instance
-        static Client& getInstance();
-
+        Client(Manager *manager);
         ~Client();
         
-        // Creates the three windows
-        bool createWindows();
-
-        // Disable the copy constructor and assignment operator.
-        Client(Client const&)         = delete;
-        void operator=(Client const&) = delete;
+        bool drawWindows();
 
     private:
-        // Private constructor so that you can't instantiate the class without using getInstance()
-        Client();
-
-        // The three windows
         void masterListWindow();
         void graphWindow();
         void dpenEditorWindow();
@@ -88,14 +77,14 @@ namespace NodeGUI
         std::vector<Node*> addDpenList(Node* selectedNode, std::vector<Node*> nodeVec);
 
         // Returns a filtered Node list
-        std::vector<Node*> getSearchList(std::vector<Node*> nodes, char search[]);
+        std::vector<Node*> getSearchList(std::vector<Node*> nodes, char filter[]);
 
         void createNode(char name[]);
 
     private:
        
         ImGuiViewport* viewport;
-        Manager& manager;
+        Manager* manager;
         Canvas canvas;
 
         const float leftMenuWidth;

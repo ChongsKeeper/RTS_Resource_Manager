@@ -1,11 +1,11 @@
 #include "Node.h"
 
 
-Node::Node (std::string newName, bool newDeleted)
+Node::Node (std::string newName)
 {
 	setName(newName);
 	dpens = {};
-	deleted = newDeleted;
+	deleted = false;
 	usable = true;
 	observersList = {};
 }

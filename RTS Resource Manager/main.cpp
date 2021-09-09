@@ -13,7 +13,7 @@ static ID3D11RenderTargetView* g_mainRenderTargetView = NULL;
 int main(int, char**)
 {
     // Instantiate the manager object.
-    Manager& manager = Manager::getInstance();
+    Manager manager;
 
     // Resource file name.
     const std::string resourceFile = "resource.txt";
@@ -65,7 +65,7 @@ int main(int, char**)
     //                                                                                                                  //
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NodeGUI::Client& nodeGuiClient = NodeGUI::Client::getInstance();
+    NodeGUI::Client nodeGuiClient(&manager);
 
     // Main loop
     bool done = false;
@@ -104,15 +104,12 @@ int main(int, char**)
 
         if (importSuccess)
         {
-            nodeGuiClient.createWindows();
+            nodeGuiClient.drawWindows();
         }
         else
         {
             failedWindow(resourceFile);
         }
-
-
-
 
         // Rendering
         ImGui::Render();
